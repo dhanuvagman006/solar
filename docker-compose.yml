@@ -1,0 +1,26 @@
+services:
+  solar_backend:
+    build:
+      context: ./solar_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./solar_backend:/app
+      - /app/virtualenv # Exclude virtualenv if any is created locally by accident
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  solar_frontend:
+    build:
+      context: ./solar_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./solar_frontend:/app
+      - /app/node_modules # Prevents local node_modules from overwriting container's
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - solar_backend
