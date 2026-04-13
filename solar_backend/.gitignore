@@ -1,11 +1,8 @@
-db.sqlite3
 .env
 __pycache__/
 *.pyc
 *.pyo
-media/
-ml/saved_models/*.h5
-ml/data/solar_dataset.csv
+
 *.egg-info/
 dist/
 build/
