@@ -3,7 +3,7 @@ import { getCalculatorEstimates } from '../api/calculator';
 import { IndianRupee, Sun, ShieldCheck } from 'lucide-react';
 
 const Calculator = () => {
-   const [size, setSize] = useState(5);
+   const [size, setSize] = useState(200);
    const [wattage, setWattage] = useState(400);
    const [estimates, setEstimates] = useState(null);
 
@@ -28,7 +28,7 @@ const Calculator = () => {
              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">System Size: <span className="text-orange-500 font-bold">{size} kW</span></label>
                 <input 
-                  type="range" min="1" max="50" step="1" 
+                  type="range" min="10" max="500" step="1" 
                   value={size} onChange={(e)=>setSize(e.target.value)} 
                   className="w-full accent-orange-500" 
                 />
@@ -36,7 +36,7 @@ const Calculator = () => {
              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Panel Wattage: <span className="text-orange-500 font-bold">{wattage} W</span></label>
                 <input 
-                  type="range" min="300" max="600" step="10" 
+                  type="range" min="100" max="2000" step="10" 
                   value={wattage} onChange={(e)=>setWattage(e.target.value)} 
                   className="w-full accent-orange-500" 
                 />

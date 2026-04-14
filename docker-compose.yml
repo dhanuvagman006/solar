@@ -6,7 +6,7 @@ services:
       - "8000:8000"
     volumes:
       - ./solar_backend:/app
-      - /app/virtualenv # Exclude virtualenv if any is created locally by accident
+      - /app/virtualenv 
     environment:
       - PYTHONUNBUFFERED=1
     command: >
