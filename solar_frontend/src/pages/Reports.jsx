@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getReportsSummary } from '../api/reports';
 import { Download, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,19 +11,36 @@ const Reports = () => {
     const [loading, setLoading] = useState(true);
     const reportRef = useRef();
 
-    useEffect(() => {
-        const fetchSummary = async () => {
-            try {
-                const data = await getReportsSummary();
-                setSummary(data);
-            } catch(e) {
-                toast.error('Failed to load reports');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchSummary();
+    const fetchSummary = useCallback(async ({ showLoading } = { showLoading: false }) => {
+        if (showLoading) setLoading(true);
+        try {
+            const data = await getReportsSummary();
+            setSummary(data);
+        } catch {
+            // Avoid spamming toasts if we're polling.
+            if (showLoading) toast.error('Failed to load reports');
+        } finally {
+            if (showLoading) setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchSummary({ showLoading: true });
+
+        // Refresh periodically so values update after new predictions.
+        const intervalId = setInterval(() => {
+            fetchSummary({ showLoading: false });
+        }, 15000);
+
+        // Also refresh when the user returns to the tab.
+        const onFocus = () => fetchSummary({ showLoading: false });
+        window.addEventListener('focus', onFocus);
+
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('focus', onFocus);
+        };
+    }, [fetchSummary]);
 
     const handleDownloadPDF = async () => {
         const input = reportRef.current;
@@ -40,7 +57,7 @@ const Reports = () => {
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save('SolarPredict_Report.pdf');
             toast.success('PDF Downloaded!', { id: 'pdf' });
-        } catch (e) {
+        } catch {
             toast.error('Failed to generate PDF', { id: 'pdf' });
         }
     };
