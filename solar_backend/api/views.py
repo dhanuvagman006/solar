@@ -9,6 +9,7 @@ from datetime import datetime
 
 import requests
 from django.db.models import Avg, Sum, Count, Max, Min
+from django.db.models.functions import TruncSecond
 from django.utils import timezone
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
@@ -502,18 +503,30 @@ def reports_summary(request):
             **agg,
         })
 
-    # Energy reading stats
-    energy_qs = EnergyReading.objects.all()
-    if location_id:
-        energy_qs = energy_qs.filter(location_id=location_id)
-
-    energy_agg = energy_qs.aggregate(
-        total_produced=Sum('produced_kwh'),
-        total_consumed=Sum('consumed_kwh'),
-        total_exported=Sum('net_exported_kwh'),
-        avg_produced=Avg('produced_kwh'),
-        reading_count=Count('id'),
+    # Energy totals derived from predictions (so values change when new predictions are made)
+    # Each "inference" creates 5 PredictionResult rows (one per model). We collapse those
+    # into a single event by grouping on timestamp truncated to the second, and taking
+    # the average predicted_kwh across the models for that event.
+    events_qs = (
+        pred_qs.annotate(event_ts=TruncSecond('timestamp'))
+        .values('event_ts')
+        .annotate(event_produced=Avg('predicted_kwh'))
     )
+    events_agg = events_qs.aggregate(
+        total_produced=Sum('event_produced'),
+        avg_produced=Avg('event_produced'),
+        inference_events=Count('event_ts'),
+    )
+
+    # We don't have measured consumption/export without EnergyReading data.
+    # For reporting continuity, treat predicted production as net exported.
+    energy_agg = {
+        'total_produced': events_agg.get('total_produced') or 0,
+        'total_consumed': 0,
+        'total_exported': events_agg.get('total_produced') or 0,
+        'avg_produced': events_agg.get('avg_produced') or 0,
+        'reading_count': events_agg.get('inference_events') or 0,
+    }
 
     # Location list
     locations = list(

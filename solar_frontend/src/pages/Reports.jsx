@@ -96,10 +96,6 @@ const Reports = () => {
                                 <span className="text-slate-500">Total Produced:</span>
                                 <span className="font-semibold text-slate-800">{formatNumber(summary?.energy_stats?.total_produced)} kWh</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Total Consumed:</span>
-                                <span className="font-semibold text-slate-800">{formatNumber(summary?.energy_stats?.total_consumed)} kWh</span>
-                            </div>
                             <div className="flex justify-between border-t border-slate-200 pt-2 mt-2">
                                 <span className="font-medium text-slate-700">Net Exported:</span>
                                 <span className="font-bold text-green-600">{formatNumber(summary?.energy_stats?.total_exported)} kWh</span>
