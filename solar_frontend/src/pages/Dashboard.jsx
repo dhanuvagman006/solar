@@ -6,6 +6,7 @@ import { formatNumber } from '../utils/formatters';
 import ModelCompareChart from '../components/ModelCompareChart';
 import MetricsTable from '../components/MetricsTable';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import GoogleWeatherWidget from '../components/GoogleWeatherWidget';
 import toast from 'react-hot-toast';
 
 const DashboardCard = ({ title, value, icon: Icon, colorClass, subtitle }) => (
@@ -99,6 +100,10 @@ const Dashboard = () => {
           icon={Zap} 
           colorClass="bg-purple-100 text-purple-600" 
         />
+      </div>
+
+      <div className="mb-8">
+        <GoogleWeatherWidget />
       </div>
 
       <div className="mb-8">

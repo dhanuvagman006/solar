@@ -1,16 +1,29 @@
 @echo off
-echo Starting Solar Energy Prediction Platform...
+echo ============================================
+echo   Solar Energy Prediction Platform
+echo ============================================
+echo.
 
-echo Starting Django Backend Server...
-cd solar_backend
+echo [SETUP] Installing backend dependencies...
+cd /d "%~dp0solar_backend"
 pip install -r requirements.txt
-start cmd /k "python manage.py runserver 0.0.0.0:8000"
+echo.
 
-echo Starting React Vite Frontend...
-cd ../solar_frontend
-start cmd /k "npm run dev"
+echo [START] Launching Django Backend on port 8000...
+start /b cmd /c "python manage.py runserver 0.0.0.0:8000 2>&1"
 
-echo Both servers are starting up! Check the new terminal windows.
-echo Frontend should be available at: http://localhost:5173
-echo Backend API should be available at: http://localhost:8000
-pause
+echo [START] Launching React Frontend on port 5173...
+cd /d "%~dp0solar_frontend"
+start /b cmd /c "npm run dev 2>&1"
+
+echo.
+echo ============================================
+echo   Both servers running in this terminal
+echo   Frontend : http://localhost:5173
+echo   Backend  : http://localhost:8000
+echo   Press Ctrl+C to stop all servers
+echo ============================================
+echo.
+
+:: Keep the terminal alive and wait for Ctrl+C
+cmd /k
