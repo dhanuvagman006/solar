@@ -40,9 +40,29 @@ const ModelCompareChart = ({ data }) => {
               return pts.length > 1 ? pts[1] : tick;
             }}
           />
-          <YAxis tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+          <YAxis tick={{fontSize: 12}} tickLine={false} axisLine={false} label={{ value: 'kWh', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 12 }} />
           <Tooltip 
-            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            content={({ active, payload, label }) => {
+              if (active && payload && payload.length) {
+                return (
+                  <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-100">
+                    <p className="text-sm font-medium text-slate-800 mb-2 border-b border-slate-50 pb-2">{label}</p>
+                    {payload.map((entry, index) => (
+                      <div key={index} className="flex items-center justify-between gap-4 text-sm mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                          <span className="text-slate-600">{entry.name}</span>
+                        </div>
+                        <span className="font-semibold text-slate-800">
+                          {Number(entry.value).toFixed(2)} kWh
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              }
+              return null;
+            }}
           />
           <Legend iconType="circle" wrapperStyle={{ fontSize: '13px', paddingTop: '20px' }} />
           

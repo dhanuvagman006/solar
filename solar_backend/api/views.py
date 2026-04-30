@@ -247,8 +247,7 @@ def fetch_weather(request):
             params={
                 'latitude': lat,
                 'longitude': lon,
-                'current': 'temperature_2m,relative_humidity_2m,wind_speed_10m,cloud_cover,uv_index',
-                'daily': 'shortwave_radiation_sum',
+                'current': 'temperature_2m,relative_humidity_2m,wind_speed_10m,cloud_cover,uv_index,direct_radiation,diffuse_radiation,surface_pressure',
                 'timezone': 'Asia/Kolkata',
             },
             timeout=10,
@@ -257,7 +256,6 @@ def fetch_weather(request):
         data = resp.json()
 
         current = data.get('current', {})
-        daily = data.get('daily', {})
 
         temperature = current.get('temperature_2m', 30.0)
         humidity = current.get('relative_humidity_2m', 50.0)
@@ -265,14 +263,14 @@ def fetch_weather(request):
         cloud_cover = current.get('cloud_cover', 20.0)
         uv_index = current.get('uv_index', 5.0)
 
-        # Convert shortwave_radiation_sum (MJ/m²) to average W/m²
-        # shortwave_radiation_sum is in MJ/m² per day
-        # divide by 3.6 to get approximate kWh/m², then convert
-        radiation_sum = (daily.get('shortwave_radiation_sum') or [0])[0] or 0
-        solar_irradiance = radiation_sum / 3.6 * 1000 / 12  # rough avg W/m² during daylight
+        # OPTIMIZATION: Calculate exact Global Horizontal Irradiance (GHI)
+        # GHI = Direct Radiation + Diffuse Radiation (measured in W/m²)
+        direct = current.get('direct_radiation', 0)
+        diffuse = current.get('diffuse_radiation', 0)
+        solar_irradiance = direct + diffuse
 
-        if solar_irradiance <= 0:
-            # Estimate from UV index and cloud cover
+        if solar_irradiance <= 0 and current.get('is_day', 0) == 1:
+            # Fallback estimation if radiation data is missing but it is daytime
             solar_irradiance = max(0, (1000 - cloud_cover * 8) * (uv_index / 10))
 
     except Exception:
