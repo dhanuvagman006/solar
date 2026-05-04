@@ -30,6 +30,7 @@ urlpatterns = [
     path('predict/', views.run_prediction, name='predict'),
     path('predictions/history/', views.prediction_history, name='prediction-history'),
     path('predictions/compare/', views.prediction_compare, name='prediction-compare'),
+    path('predictions/forecast/', views.prediction_forecast, name='prediction-forecast'),
 
     # Reports
     path('reports/summary/', views.reports_summary, name='reports-summary'),

@@ -3,11 +3,12 @@ import IndiaMap from '../components/IndiaMap';
 import WeatherCard from '../components/WeatherCard';
 import ModelResultCard from '../components/ModelResultCard';
 import { useLocationStore } from '../store/locationStore';
-import { runPrediction } from '../api/predictions';
+import { runPrediction, getPredictionForecast } from '../api/predictions';
 import { Zap, Settings, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ModelCompareChart from '../components/ModelCompareChart';
+import ForecastTable from '../components/ForecastTable';
 
 const Prediction = () => {
   const location = useLocationStore((state) => state.location);
@@ -23,6 +24,8 @@ const Prediction = () => {
 
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [forecast, setForecast] = useState([]);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
 
   // Derive panel count based on size and wattage
   const panelCount = Math.floor((formData.size_kw * 1000) / formData.panel_wattage);
@@ -89,6 +92,41 @@ const Prediction = () => {
     }
   };
 
+  const handleForecast = async () => {
+    if (!location) {
+      toast.error('Please select a location on the map first.');
+      return;
+    }
+
+    setIsForecastLoading(true);
+    setForecast([]);
+
+    const payload = {
+      location_id: location.location_id || location.id,
+      size_kw: formData.size_kw,
+      panel_wattage: formData.panel_wattage,
+      panel_count: panelCount,
+      area_m2: formData.area_m2,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      solar_zone: location.solar_zone,
+      efficiency: formData.efficiency,
+      performance_ratio: formData.performance_ratio,
+      forecast_days: 7,
+    };
+
+    try {
+      const forecastData = await getPredictionForecast(payload);
+      setForecast(forecastData);
+      toast.success('7-day forecast generated!');
+    } catch (error) {
+      console.error('Forecast error', error.response?.data);
+      toast.error(error.response?.data?.error || 'Failed to load forecast');
+    } finally {
+      setIsForecastLoading(false);
+    }
+  };
+
   // Find max prediction to highlight
   const maxPrediction = results.length > 0 
     ? Math.max(...results.map(r => r.predicted_kwh)) 
@@ -103,7 +141,7 @@ const Prediction = () => {
     <div className="p-8 max-w-7xl mx-auto pb-20">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800">Energy Prediction</h1>
-        <p className="text-slate-500 mt-1">Select location on the map and configure system parameters.</p>
+        <p className="text-slate-500 mt-1">Select a location and configure system parameters to run predictions or a 7-day forecast.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -148,10 +186,10 @@ const Prediction = () => {
                  </div>
              </div>
 
-             <div className="mt-6 pt-6 border-t border-slate-100">
-               <button
-                 onClick={handlePredict}
-                 disabled={!location || !weather || isLoading}
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <button
+                  onClick={handlePredict}
+                  disabled={!location || !weather || isLoading}
                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                >
                  {isLoading ? (
@@ -159,42 +197,60 @@ const Prediction = () => {
                  ) : (
                    <Zap size={20} />
                  )}
-                 Run All 5 Models
-               </button>
-             </div>
+                  Run All 5 Models
+                </button>
+                <button
+                  onClick={handleForecast}
+                  disabled={!location || isForecastLoading}
+                  className="mt-3 w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isForecastLoading ? (
+                    <RefreshCw className="animate-spin" size={20} />
+                  ) : (
+                    <Zap size={20} />
+                  )}
+                  Load 7-Day Forecast
+                </button>
+              </div>
           </div>
         </div>
 
         {/* Right Column - Results */}
         <div className="lg:col-span-7">
-           {!isLoading && results.length === 0 ? (
-             <div className="h-full min-h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 p-8 text-center flex-col gap-4">
-                <Zap size={48} className="text-slate-200" />
-                <p>Run prediction to see output from all 5 Deep Learning models.</p>
-             </div>
-           ) : isLoading ? (
-             <div>
-                <LoadingSkeleton count={4} />
-             </div>
-           ) : (
-             <div className="space-y-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                     {results.map((r, idx) => (
-                         <ModelResultCard 
-                           key={idx} 
-                           result={r} 
-                           isHighest={r.predicted_kwh === maxPrediction && maxPrediction > 0} 
-                         />
-                     ))}
-                 </div>
-                 
-                 {results.length > 0 && chartData.length > 0 && (
-                    <div className="mt-8">
-                       <ModelCompareChart data={chartData} />
-                    </div>
-                 )}
-             </div>
-           )}
+            <div className="space-y-6">
+              {!isLoading && results.length === 0 ? (
+                <div className="h-full min-h-[400px] flex items-center justify-center bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 p-8 text-center flex-col gap-4">
+                   <Zap size={48} className="text-slate-200" />
+                   <p>Run prediction to see output from all 5 Deep Learning models.</p>
+                </div>
+              ) : isLoading ? (
+                <div>
+                   <LoadingSkeleton count={4} />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                      {results.map((r, idx) => (
+                          <ModelResultCard 
+                            key={idx} 
+                            result={r} 
+                            isHighest={r.predicted_kwh === maxPrediction && maxPrediction > 0} 
+                          />
+                      ))}
+                  </div>
+                  
+                  {results.length > 0 && chartData.length > 0 && (
+                     <div className="mt-8">
+                        <ModelCompareChart data={chartData} />
+                     </div>
+                  )}
+                </>
+              )}
+
+              <div className="mt-8">
+                <ForecastTable data={forecast} isLoading={isForecastLoading} />
+              </div>
+            </div>
         </div>
       </div>
     </div>
