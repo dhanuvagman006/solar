@@ -14,3 +14,8 @@ export const getPredictionCompare = async (params = {}) => {
   const response = await api.get('/predictions/compare/', { params });
   return response.data;
 };
+
+export const getPredictionForecast = async (payload) => {
+  const response = await api.post('/predictions/forecast/', payload);
+  return response.data;
+};

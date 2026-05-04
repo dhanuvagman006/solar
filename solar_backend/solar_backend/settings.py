@@ -15,6 +15,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production-!@
 
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
+OPEN_METEO_URL = os.getenv('OPEN_METEO_URL', 'https://api.open-meteo.com/v1/forecast')
+NOMINATIM_URL = os.getenv('NOMINATIM_URL', 'https://nominatim.openstreetmap.org/reverse')
+OPEN_METEO_TIMEOUT = int(os.getenv('OPEN_METEO_TIMEOUT', '10'))
+NOMINATIM_TIMEOUT = int(os.getenv('NOMINATIM_TIMEOUT', '10'))
+WEATHER_CACHE_TTL_SECONDS = int(os.getenv('WEATHER_CACHE_TTL_SECONDS', '600'))
+FORECAST_CACHE_TTL_SECONDS = int(os.getenv('FORECAST_CACHE_TTL_SECONDS', '900'))
+MODEL_DIR = os.getenv('MODEL_DIR', str(BASE_DIR / 'ml' / 'saved_models'))
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -113,6 +121,14 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+}
+
+# Cache
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "solar-cache",
+    }
 }
 
 # JWT Configuration

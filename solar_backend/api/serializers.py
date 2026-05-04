@@ -93,6 +93,21 @@ class PredictionRequestSerializer(serializers.Serializer):
     end_date = serializers.DateField(required=False, allow_null=True)
 
 
+class ForecastRequestSerializer(serializers.Serializer):
+    solar_system_id = serializers.IntegerField(required=False, allow_null=True)
+    location_id = serializers.IntegerField(required=False, allow_null=True)
+    size_kw = serializers.FloatField()
+    panel_wattage = serializers.IntegerField()
+    panel_count = serializers.IntegerField()
+    area_m2 = serializers.FloatField()
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+    solar_zone = serializers.IntegerField()
+    efficiency = serializers.FloatField()
+    performance_ratio = serializers.FloatField()
+    forecast_days = serializers.IntegerField(required=False, default=7, min_value=1, max_value=14)
+
+
 class EnergyCSVUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
     solar_system_id = serializers.IntegerField()

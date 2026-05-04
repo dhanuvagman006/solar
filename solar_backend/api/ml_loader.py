@@ -4,11 +4,18 @@ TensorFlow is imported lazily to avoid JAX/ml_dtypes conflicts during management
 """
 
 import os
+from pathlib import Path
 import json
 import numpy as np
 import joblib
 
-MODEL_DIR = os.path.join(os.path.dirname(__file__), '..', 'ml', 'saved_models')
+DEFAULT_MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "ml", "saved_models")
+try:
+    from django.conf import settings
+    MODEL_DIR = getattr(settings, "MODEL_DIR", DEFAULT_MODEL_DIR)
+except Exception:
+    MODEL_DIR = DEFAULT_MODEL_DIR
+MODEL_DIR = str(Path(MODEL_DIR))
 
 _models = {}
 _scaler_X = None
